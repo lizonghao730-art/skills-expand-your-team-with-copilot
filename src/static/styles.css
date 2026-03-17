@@ -468,6 +468,57 @@ button {
   font-size: 0.85rem;
 }
 
+/* Schedule visual elements */
+.schedule-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+  font-size: 0.82rem;
+}
+
+.schedule-icon {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  margin-bottom: 2px;
+}
+
+.schedule-days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.schedule-day-pill {
+  background-color: var(--primary);
+  color: white;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 10px;
+  letter-spacing: 0.2px;
+}
+
+.schedule-time {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+}
+
+.activity-description {
+  margin-bottom: 8px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.participant-email {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 footer {
   text-align: center;
   margin-top: 20px;

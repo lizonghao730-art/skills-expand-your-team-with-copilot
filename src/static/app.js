@@ -25,13 +25,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const closeLoginModal = document.querySelector(".close-login-modal");
   const loginMessage = document.getElementById("login-message");
 
-  // Activity categories with corresponding colors
+  // Activity categories with corresponding colors and icons
   const activityTypes = {
-    sports: { label: "Sports", color: "#e8f5e9", textColor: "#2e7d32" },
-    arts: { label: "Arts", color: "#f3e5f5", textColor: "#7b1fa2" },
-    academic: { label: "Academic", color: "#e3f2fd", textColor: "#1565c0" },
-    community: { label: "Community", color: "#fff3e0", textColor: "#e65100" },
-    technology: { label: "Technology", color: "#e8eaf6", textColor: "#3949ab" },
+    sports: { label: "Sports", icon: "🏃", color: "#e8f5e9", textColor: "#2e7d32" },
+    arts: { label: "Arts", icon: "🎨", color: "#f3e5f5", textColor: "#7b1fa2" },
+    academic: { label: "Academic", icon: "📚", color: "#e3f2fd", textColor: "#1565c0" },
+    community: { label: "Community", icon: "🤝", color: "#fff3e0", textColor: "#e65100" },
+    technology: { label: "Technology", icon: "💻", color: "#e8eaf6", textColor: "#3949ab" },
   };
 
   // State for activities and filters
@@ -278,30 +278,41 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // Convert 24h time format to 12h AM/PM format for display
+  function formatTime(time24) {
+    const [hours, minutes] = time24.split(":").map((num) => parseInt(num));
+    const period = hours >= 12 ? "PM" : "AM";
+    const displayHours = hours % 12 || 12;
+    return `${displayHours}:${minutes.toString().padStart(2, "0")} ${period}`;
+  }
+
   // Format schedule for display - handles both old and new format
   function formatSchedule(details) {
     // If schedule_details is available, use the structured data
     if (details.schedule_details) {
       const days = details.schedule_details.days.join(", ");
-
-      // Convert 24h time format to 12h AM/PM format for display
-      const formatTime = (time24) => {
-        const [hours, minutes] = time24.split(":").map((num) => parseInt(num));
-        const period = hours >= 12 ? "PM" : "AM";
-        const displayHours = hours % 12 || 12; // Convert 0 to 12 for 12 AM
-        return `${displayHours}:${minutes
-          .toString()
-          .padStart(2, "0")} ${period}`;
-      };
-
       const startTime = formatTime(details.schedule_details.start_time);
       const endTime = formatTime(details.schedule_details.end_time);
-
       return `${days}, ${startTime} - ${endTime}`;
     }
-
     // Fallback to the string format if schedule_details isn't available
     return details.schedule;
+  }
+
+  // Build visual HTML for schedule (day pills + time badge)
+  function buildScheduleHtml(details) {
+    if (details.schedule_details) {
+      const dayPills = details.schedule_details.days
+        .map((day) => `<span class="schedule-day-pill">${day}</span>`)
+        .join("");
+      const startTime = formatTime(details.schedule_details.start_time);
+      const endTime = formatTime(details.schedule_details.end_time);
+      return `
+        <div class="schedule-days">${dayPills}</div>
+        <div class="schedule-time">⏰ ${startTime} - ${endTime}</div>
+      `;
+    }
+    return `<span>${details.schedule}</span>`;
   }
 
   // Function to determine activity type (this would ideally come from backend)
@@ -496,13 +507,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const activityType = getActivityType(name, details.description);
     const typeInfo = activityTypes[activityType];
 
-    // Format the schedule using the new helper function
-    const formattedSchedule = formatSchedule(details);
+    // Build visual schedule HTML
+    const scheduleHtml = buildScheduleHtml(details);
 
-    // Create activity tag
+    // Create activity tag with icon
     const tagHtml = `
       <span class="activity-tag" style="background-color: ${typeInfo.color}; color: ${typeInfo.textColor}">
-        ${typeInfo.label}
+        ${typeInfo.icon} ${typeInfo.label}
       </span>
     `;
 
@@ -513,8 +524,8 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="capacity-bar-fill" style="width: ${capacityPercentage}%"></div>
         </div>
         <div class="capacity-text">
-          <span>${takenSpots} enrolled</span>
-          <span>${spotsLeft} spots left</span>
+          <span>👥 ${takenSpots} / ${totalSpots} enrolled</span>
+          <span>${isFull ? "🔴 Full" : `🟢 ${spotsLeft} left`}</span>
         </div>
       </div>
     `;
@@ -522,20 +533,21 @@ document.addEventListener("DOMContentLoaded", () => {
     activityCard.innerHTML = `
       ${tagHtml}
       <h4>${name}</h4>
-      <p>${details.description}</p>
-      <p class="tooltip">
-        <strong>Schedule:</strong> ${formattedSchedule}
+      <p class="activity-description">${details.description}</p>
+      <div class="schedule-info tooltip">
+        <span class="schedule-icon">📅</span>
+        ${scheduleHtml}
         <span class="tooltip-text">Regular meetings at this time throughout the semester</span>
-      </p>
+      </div>
       ${capacityIndicator}
       <div class="participants-list">
-        <h5>Current Participants:</h5>
+        <h5>👤 Participants (${takenSpots})</h5>
         <ul>
           ${details.participants
             .map(
               (email) => `
             <li>
-              ${email}
+              <span class="participant-email">${email}</span>
               ${
                 currentUser
                   ? `
@@ -559,7 +571,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <button class="register-button" data-activity="${name}" ${
                 isFull ? "disabled" : ""
               }>
-            ${isFull ? "Activity Full" : "Register Student"}
+            ${isFull ? "🔒 Activity Full" : "➕ Register Student"}
           </button>
         `
             : `
